@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id    String     @id @default(cuid())
+  email String     @unique
+  name  String
+  password_hash String
+  role  UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  visits Visit[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  admin
+  doctor
+  pharmacist
+  lab_staff
+  records_officer
+}
+
+// Patient model
+model Patient {
+  id        String     @id @default(cuid())
+  patient_no String    @unique
+  name      String
+  dob       DateTime
+  sex       String
+  contact   String
+  address   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  visits Visit[]
+
+  @@map("patients")
+}
+
+// Visit model
+model Visit {
+  id          String     @id @default(cuid())
+  patient_id  String
+  doctor_id   String
+  date        DateTime   @default(now())
+  complaint   String
+  diagnosis   String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Keys
+  patient Patient @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  doctor  User    @relation(fields: [doctor_id], references: [id], onDelete: Restrict)
+
+  // Relations
+  prescriptions Prescription[]
+  labRequests   LabRequest[]
+
+  @@map("visits")
+}
+
+// Prescription model
+model Prescription {
+  id        String     @id @default(cuid())
+  visit_id  String
+  drug      String
+  dosage    String
+  status    PrescriptionStatus @default(pending)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Foreign Key
+  visit Visit @relation(fields: [visit_id], references: [id], onDelete: Cascade)
+
+  @@map("prescriptions")
+}
+
+enum PrescriptionStatus {
+  pending
+  dispensed
+}
+
+// LabRequest model
+model LabRequest {
+  id          String     @id @default(cuid())
+  visit_id    String
+  test_name   String
+  status      LabRequestStatus @default(pending)
+  result_text String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Foreign Key
+  visit Visit @relation(fields: [visit_id], references: [id], onDelete: Cascade)
+
+  @@map("lab_requests")
+}
+
+enum LabRequestStatus {
+  pending
+  completed
+}

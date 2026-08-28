@@ -1,0 +1,46 @@
+{
+  "name": "integrated-electronic-health-record-system",
+  "version": "1.0.0",
+  "description": "EHR system backend MVP",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:studio": "prisma studio"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/izuchukwuMcGibson/Integrated-Electronic-Health-Record-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/izuchukwuMcGibson/Integrated-Electronic-Health-Record-System/issues"
+  },
+  "homepage": "https://github.com/izuchukwuMcGibson/Integrated-Electronic-Health-Record-System#readme",
+  "dependencies": {
+    "@prisma/client": "5.7.0",
+    "@types/cors": "^2.8.19",
+    "bcryptjs": "2.4.3",
+    "cors": "^2.8.6",
+    "dotenv": "^16.3.1",
+    "express": "4.18.2",
+    "jsonwebtoken": "9.0.2",
+    "nodemon": "^3.1.14",
+    "zod": "3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "2.4.6",
+    "@types/express": "4.17.21",
+    "@types/jsonwebtoken": "9.0.7",
+    "@types/node": "20.10.6",
+    "prisma": "5.7.0",
+    "ts-node": "10.9.2",
+    "typescript": "5.3.3"
+  }
+}
