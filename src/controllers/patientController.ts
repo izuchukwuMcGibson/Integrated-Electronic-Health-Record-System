@@ -5,6 +5,7 @@ import {
   PatientInput,
   VisitInput,
   PrescriptionInput,
+  PrescriptionUpdateInput,
   LabRequestInput,
 } from "../types/patient";
 
@@ -32,6 +33,7 @@ const readString = (
 
   return trimmed;
 };
+
 
 const validatePatientInput = (body: unknown): PatientInput => {
   if (!isRecord(body)) {
@@ -71,6 +73,30 @@ const validatePrescriptionInput = (body: unknown): PrescriptionInput => {
     drug: readString(body, "drug", "Drug"),
     dosage: readString(body, "dosage", "Dosage"),
   };
+};
+
+const validatePrescriptionUpdateInput = (
+  body: unknown,
+): PrescriptionUpdateInput => {
+  if (!isRecord(body)) {
+    throw new AppError(400, "Prescription payload is required");
+  }
+
+  const data: PrescriptionUpdateInput = {};
+
+  if ("drug" in body) {
+    data.drug = readString(body, "drug", "Drug");
+  }
+
+  if ("dosage" in body) {
+    data.dosage = readString(body, "dosage", "Dosage");
+  }
+
+  if (Object.keys(data).length === 0) {
+    throw new AppError(400, "Provide a drug or dosage to update");
+  }
+
+  return data;
 };
 
 const validateLabRequestInput = (body: unknown): LabRequestInput => {
@@ -156,6 +182,65 @@ export const getPatientById = async (
   }
 };
 
+const visitDetails = {
+  patient: true,
+  doctor: {
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
+  },
+  prescriptions: true,
+  labRequests: true,
+};
+
+export const getVisits = async (
+  req: Request,
+  res: Response<ApiResponse>,
+  next: NextFunction,
+) => {
+  try {
+    const visits = await prisma.visit.findMany({
+      include: visitDetails,
+      orderBy: { date: "desc" },
+    });
+
+    res.json({ success: true, data: visits });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getPatientVisits = async (
+  req: Request,
+  res: Response<ApiResponse>,
+  next: NextFunction,
+) => {
+  try {
+    const { patientId } = req.params;
+    const patient = await prisma.patient.findUnique({
+      where: { id: patientId },
+      select: { id: true },
+    });
+
+    if (!patient) {
+      throw new AppError(404, "Patient not found");
+    }
+
+    const visits = await prisma.visit.findMany({
+      where: { patient_id: patientId },
+      include: visitDetails,
+      orderBy: { date: "desc" },
+    });
+
+    res.json({ success: true, data: visits });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createVisit = async (
   req: Request,
   res: Response<ApiResponse>,
@@ -223,6 +308,60 @@ export const createPrescription = async (
     });
 
     res.status(201).json({ success: true, data: prescription });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getVisitPrescriptions = async (
+  req: Request,
+  res: Response<ApiResponse>,
+  next: NextFunction,
+) => {
+  try {
+    const { visitId } = req.params;
+    const visit = await prisma.visit.findUnique({
+      where: { id: visitId },
+      select: { id: true },
+    });
+
+    if (!visit) {
+      throw new AppError(404, "Visit not found");
+    }
+
+    const prescriptions = await prisma.prescription.findMany({
+      where: { visit_id: visitId },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json({ success: true, data: prescriptions });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePrescription = async (
+  req: Request,
+  res: Response<ApiResponse>,
+  next: NextFunction,
+) => {
+  try {
+    const data = validatePrescriptionUpdateInput(req.body);
+    const prescription = await prisma.prescription.findUnique({
+      where: { id: req.params.prescriptionId },
+      select: { id: true },
+    });
+
+    if (!prescription) {
+      throw new AppError(404, "Prescription not found");
+    }
+
+    const updatedPrescription = await prisma.prescription.update({
+      where: { id: prescription.id },
+      data,
+    });
+
+    res.json({ success: true, data: updatedPrescription });
   } catch (error) {
     next(error);
   }

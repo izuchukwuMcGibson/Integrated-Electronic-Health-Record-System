@@ -19,6 +19,8 @@ export type PrescriptionInput = {
   dosage: string;
 };
 
+export type PrescriptionUpdateInput = Partial<PrescriptionInput>;
+
 export type LabRequestInput = {
   test_name: string;
 };

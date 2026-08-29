@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import express, { Request, Response } from "express";
 import {
   errorHandler,
@@ -7,7 +10,8 @@ import {
 import { PrismaClient } from "@prisma/client";
 import authRoutes from "./routes/auth";
 import patientRoutes from "./routes/patient";
-import cors from "cors"
+import cors from "cors";
+import morgan from "morgan";
 
 const NODE_ENV = process.env.NODE_ENV ?? "development";
 const PORT = Number(process.env.PORT ?? 3000);
@@ -23,7 +27,7 @@ const allowedOrigins = [
 
 // Middleware
 app.use(express.json());
-
+app.use(morgan("combined"));
 app.use(
   cors({
     origin: allowedOrigins,

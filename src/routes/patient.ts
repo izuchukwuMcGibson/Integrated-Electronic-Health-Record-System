@@ -6,8 +6,12 @@ import {
   createPatient,
   getPatients,
   getPatientById,
+  getVisits,
+  getPatientVisits,
   createVisit,
   createPrescription,
+  getVisitPrescriptions,
+  updatePrescription,
   createLabRequest,
 } from "../controllers/patientController";
 
@@ -24,6 +28,10 @@ router.get("/get-patients", authenticate, asyncHandler(getPatients));
 
 router.get("/get-patient/:id", authenticate, asyncHandler(getPatientById));
 
+router.get("/visits", authenticate, asyncHandler(getVisits));
+
+router.get("/:patientId/visits", authenticate, asyncHandler(getPatientVisits));
+
 router.post(
   "/:patientId/visits",
   authenticate,
@@ -36,6 +44,19 @@ router.post(
   authenticate,
   authorize(UserRole.doctor),
   asyncHandler(createPrescription),
+);
+
+router.get(
+  "/visits/:visitId/prescriptions",
+  authenticate,
+  asyncHandler(getVisitPrescriptions),
+);
+
+router.patch(
+  "/prescriptions/:prescriptionId",
+  authenticate,
+  authorize(UserRole.doctor),
+  asyncHandler(updatePrescription),
 );
 
 router.post(
