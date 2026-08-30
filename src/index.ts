@@ -20,7 +20,8 @@ const app = express();
 const prisma = new PrismaClient();
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://localhost:5173", // Example local frontend (Vite)
+  "http://localhost:5173", // Example local frontend (Vite),
+  "https://ihrs-frontend-chi.vercel.app",
   process.env.FRONTEND_URL || "", // Add your production URL to your .env
 ].filter(Boolean);
 
