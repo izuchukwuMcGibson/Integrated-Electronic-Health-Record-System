@@ -10,6 +10,7 @@ import {
 import { PrismaClient } from "@prisma/client";
 import authRoutes from "./routes/auth";
 import patientRoutes from "./routes/patient";
+import aiReviewRoutes from "./routes/aiReview";
 import cors from "cors";
 import morgan from "morgan";
 
@@ -24,7 +25,6 @@ const allowedOrigins = [
   "https://ihrs-frontend-chi.vercel.app",
   process.env.FRONTEND_URL || "", // Add your production URL to your .env
 ].filter(Boolean);
-
 
 // Middleware
 app.use(express.json());
@@ -50,6 +50,7 @@ app.get(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/patients", patientRoutes);
+app.use("/api/ai-review", aiReviewRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response<ApiResponse>) => {

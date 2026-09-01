@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/izuchukwuMcGibson/Integrated-Electronic-Health-Record-System#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "5.7.0",
     "@types/cors": "^2.8.19",
     "@types/morgan": "^1.9.10",
