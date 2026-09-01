@@ -36,7 +36,7 @@ export const generateAiReview = async (
     const prompt = buildAnalysisPrompt(data, previousData);
 
     // Call Gemini API
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
     const result = await model.generateContent(prompt);
     const responseText =
       result.response.text() || "Unable to generate insights";
