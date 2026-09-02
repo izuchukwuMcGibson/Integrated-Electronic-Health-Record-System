@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { PrismaClient } from "@prisma/client";
 import { AppError, ApiResponse } from "../middleware/errorHandler";
 import {
   DailyHealthData,
@@ -8,6 +9,104 @@ import {
 } from "../types/aiReview";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const prisma = new PrismaClient();
+
+export const getDailyHealthData = async (
+  req: Request,
+  res: Response<ApiResponse<DailyHealthData>>,
+): Promise<void> => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Fetch all visits from today
+    const todayVisits = await prisma.visit.findMany({
+      where: {
+        date: {
+          gte: today,
+          lt: tomorrow,
+        },
+      },
+      include: {
+        patient: true,
+      },
+    });
+
+    // Count diseases from diagnoses
+    const newCases: Record<string, number> = {};
+    todayVisits.forEach((visit) => {
+      if (visit.diagnosis) {
+        newCases[visit.diagnosis] = (newCases[visit.diagnosis] || 0) + 1;
+      }
+    });
+
+    // Fetch yesterday's data for comparison
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dayAfterYesterday = new Date(yesterday);
+    dayAfterYesterday.setDate(dayAfterYesterday.getDate() + 1);
+
+    const yesterdayVisits = await prisma.visit.findMany({
+      where: {
+        date: {
+          gte: yesterday,
+          lt: dayAfterYesterday,
+        },
+      },
+    });
+
+    const yesterdayNewCases: Record<string, number> = {};
+    yesterdayVisits.forEach((visit) => {
+      if (visit.diagnosis) {
+        yesterdayNewCases[visit.diagnosis] =
+          (yesterdayNewCases[visit.diagnosis] || 0) + 1;
+      }
+    });
+
+    // Count admissions and discharges today
+    // You may need to add status field to visit model for this to work properly
+    const admissions = todayVisits.length; // Assuming each visit is an admission
+    const discharges = 0; // You'll need to track this separately in your schema
+
+    // Get total patients
+    const totalPatients = await prisma.patient.count();
+
+    const dailyData: DailyHealthData = {
+      date: today.toISOString().split("T")[0],
+      totalPatients,
+      newCases,
+      admissions,
+      discharges,
+      deaths: 0,
+      weatherCondition: undefined,
+      staffOnDuty: undefined,
+      availableBeds: undefined,
+      totalBeds: undefined,
+      previousDayData: {
+        totalPatients: await prisma.patient.count(), // Ideally get historical count
+        newCases: yesterdayNewCases,
+      },
+    };
+
+    res.json({
+      success: true,
+      data: dailyData,
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    console.error("Get Daily Health Data Error:", error);
+    throw new AppError(
+      500,
+      error instanceof Error
+        ? error.message
+        : "Failed to fetch daily health data",
+    );
+  }
+};
 
 export const generateAiReview = async (
   req: Request<{}, {}, AiReviewRequest>,

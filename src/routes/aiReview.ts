@@ -2,7 +2,10 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/errorHandler";
 import { authenticate, authorize } from "../middleware/auth";
 import { UserRole } from "@prisma/client";
-import { generateAiReview } from "../controllers/aiReviewController";
+import {
+  generateAiReview,
+  getDailyHealthData,
+} from "../controllers/aiReviewController";
 
 const router = Router();
 
@@ -51,6 +54,34 @@ router.post(
   authenticate,
   authorize(UserRole.admin, UserRole.doctor),
   asyncHandler(generateAiReview),
+);
+
+/**
+ * GET /api/ai-review/daily-data
+ * Auto-fetches daily health facility data from database
+ *
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "date": "2025-03-15",
+ *     "totalPatients": 150,
+ *     "newCases": { "Malaria": 12, "Typhoid": 5 },
+ *     "admissions": 12,
+ *     "discharges": 0,
+ *     "deaths": 0,
+ *     "previousDayData": {
+ *       "totalPatients": 142,
+ *       "newCases": { "Malaria": 8, "Typhoid": 3 }
+ *     }
+ *   }
+ * }
+ */
+router.get(
+  "/daily-data",
+  authenticate,
+  authorize(UserRole.admin, UserRole.doctor),
+  asyncHandler(getDailyHealthData),
 );
 
 export default router;
